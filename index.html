@@ -1334,13 +1334,16 @@
         const { data, error } = await supabase
           .from('messages')
           .select('*')
-          .order('created_at', { ascending: true })
-          .limit(50);
+          .order('created_at', { ascending: true });
         
         if (error) throw error;
         
         messagesContainer.innerHTML = '';
-        data.forEach(msg => renderMessage(msg));
+        data.forEach(msg => {
+          if (!document.querySelector(`[data-message-id="${msg.id}"]`)) {
+            renderMessage(msg);
+          }
+        });
         scrollToBottom();
       } catch (e) {
         console.error('Failed to load messages:', e);
@@ -1365,14 +1368,16 @@
       supabase
         .channel('world-chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-          renderMessage(payload.new);
-          scrollToBottom();
-          // Play notification sound for messages from other users
-          if (payload.new.username !== username && notificationSound) {
-            notificationSound.play().catch(err => {
-              // Autoplay may be blocked until user interacts with page
-              console.log('Notification sound blocked:', err);
-            });
+          // Check if message already exists before rendering
+          if (!document.querySelector(`[data-message-id="${payload.new.id}"]`)) {
+            renderMessage(payload.new);
+            scrollToBottom();
+            // Play notification sound for messages from other users
+            if (payload.new.username !== username && notificationSound) {
+              notificationSound.play().catch(err => {
+                console.log('Notification sound blocked:', err);
+              });
+            }
           }
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
