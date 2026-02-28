@@ -31,7 +31,7 @@ A real-time chat application built with HTML, CSS, and Supabase.
 
 ## PIN Code
 
-Default PIN: `2122`
+Default PIN: ``
 
 ## Tech Stack
 
