@@ -1128,6 +1128,9 @@
     <span id="upload-text">Uploading...</span>
   </div>
 
+  <!-- Notification Sound -->
+  <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
+
   <!-- Hidden File Inputs -->
   <input type="file" id="file-image" accept="image/*" style="display:none">
   <input type="file" id="file-video" accept="video/*" style="display:none">
@@ -1204,6 +1207,7 @@
     const replyToName = document.getElementById('reply-to-name');
     const replyText = document.getElementById('reply-text');
     const replyCancel = document.getElementById('reply-cancel');
+    const notificationSound = document.getElementById('notification-sound');
     
     let selectedMessageId = null;
     let selectedMessageElement = null;
@@ -1363,6 +1367,13 @@
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
           renderMessage(payload.new);
           scrollToBottom();
+          // Play notification sound for messages from other users
+          if (payload.new.username !== username && notificationSound) {
+            notificationSound.play().catch(err => {
+              // Autoplay may be blocked until user interacts with page
+              console.log('Notification sound blocked:', err);
+            });
+          }
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
           // Remove deleted message from all users' screens
